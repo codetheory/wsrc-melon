@@ -2,23 +2,21 @@
 A Melon Web Source for Mp3tag.
 <br><br>
 
-### What it does
----------------------
+# What it does
 Parses album information from [Melon](https://melon.com) using the [Web Source Framework](https://help.mp3tag.de/main_online.html) provided by Mp3tag.
 
-### Installation
----------------------
+# Installation
 Ensure that [Mp3tag](https://www.mp3tag.de/en/) is installed.
 
 Copy the .src files into the sources folder located in:<br>
-`"%AppData%\Roaming\Mp3tag\data\sources"`
+> %AppData%\Roaming\Mp3tag\data\sources
 
-### Usage
----------------------
+# Usage
 Navigate to Tag Sources > Melon.
+<br>
+For Melon Lyrics, it's recommended to parse with Melon.src first to obtain the song ID for an easier lookup.
 
-### Parsed Tags _(10/12/2020)_
----------------------
+# Parsed Tags _(10/12/2020)_
 The following tags are retrieved from the source:
 <br>
 
