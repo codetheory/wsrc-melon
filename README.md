@@ -27,8 +27,8 @@ The following tags are retrieved from the source:
 | Copyright         | %COPYRIGHT%       | 
 | Cover             |                   | The album artwork.
 | Genre             | %GENRE%           |
-| Melon Artist ID   | %MELONARTISTID%   | The unique artist identifer for each track.
-| Melon Song ID     | %MELONSONGID%     | The unique song identifer for each track. Can be used with Melon Lyrics.
+| Melon Artist ID   | %MELONARTISTID%   | The unique artist identifier for each track.
+| Melon Song ID     | %MELONSONGID%     | The unique song identifier for each track. Can be used with Melon Lyrics.
 | Publisher         | %PUBLISHER%       | 
 | Track #           | %TRACK%           | 
 | Year              | %YEAR%            | Parsed in the format YYYY.MM.DD
