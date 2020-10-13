@@ -1,0 +1,76 @@
+# --------------------------------------------------------------------------------------------------
+# Mp3tag Web Source ->
+# Name: Melon Lyrics (Query) (멜론 - 가사)
+# By: Jame S.
+# Version: 1.0
+# Last revision: 10/12/2020
+# --------------------------------------------------------------------------------------------------
+
+[Name]=Melon Lyrics (Query)
+[BasedOn]=melon.com
+[IndexUrl]=https://www.melon.com/search/lyric/index.htm?q=%s
+[AlbumUrl]=https://www.melon.com/song/detail.htm?songId=
+[WordSeparator]=+
+[IndexFormat]=%_preview%|%_url%|%Title%|%Artist%|%Album%|
+[SearchBy]=%title% - %artist%
+[UserAgent]=1
+[Encoding]=url-utf-8
+
+# --------------------------------------------------------------------------------------------------
+# / INDEX
+# --------------------------------------------------------------------------------------------------
+[ParserScriptIndex]=...
+Debug "on" "D:\Dev\wsrc-melon\Debug\MelonLyrics-Query_IndexParse.txt" "10"
+
+FindLine "<dl class=\"cntt_lyric"
+
+Do
+    JoinUntil "</dl"
+
+    RegexpReplace "\t+" ""
+    RegexpReplace "<b>|</b>" ""
+
+    # Preview & URL
+    Say "https://www.melon.com/song/detail.htm?songId="
+    SayRegexp "(?<=goSongDetail\(').*?(?='\))" "|" ""
+    Say "|"
+
+    # Title
+    FindInLine "class=\"text\">"
+    SayUntil "</a>"
+    Say "|"
+
+    # Artist
+    FindInLine "<span class=\"atist\">"
+    If "<a"
+        FindInLine "\">"
+        SayUntil "</a>"
+    Else
+        SayUntil "</span>"
+    Endif
+    Say "|"
+
+    # Album
+    FindInLine "<span class=\"album\">"
+    FindInLine "이동\">"
+    SayUntil "</a>"
+    Say "|"    
+
+	Saynewline
+    FindLine "<dl class=\"cntt_lyric" 2 1
+    Unspace
+While "<dl class=\"cntt_lyric"
+
+# --------------------------------------------------------------------------------------------------
+# / ALBUM
+# --------------------------------------------------------------------------------------------------
+[ParserScriptAlbum]=...
+#Debug "on" "D:\Dev\wsrc-melon\Debug\MelonLyrics-Query_AlbumParse.txt" "10"
+
+FindLine "<div class=\"section_lyric\">"
+JoinUntil "section_cmt"
+RegexpReplace "\t+" ""
+RegexpReplace " <BR>|<BR>| <br>|<br>" "\r\n"
+
+OutputTo "UNSYNCEDLYRICS"
+SayRegexp "(?<=-->).*(?=<\/div><button)" "" ""

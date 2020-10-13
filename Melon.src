@@ -1,0 +1,187 @@
+# --------------------------------------------------------------------------------------------------
+# Mp3tag Web Source ->
+# Name: Melon (멜론)
+# By: Jame S.
+# Version: 1.0
+# Last revision: 10/12/2020
+# --------------------------------------------------------------------------------------------------
+
+[Name]=Melon
+[BasedOn]=melon.com
+[IndexUrl]=https://www.melon.com/search/album/index.htm?q=%s
+[AlbumUrl]=https://www.melon.com/album/detail.htm?albumId=
+[WordSeparator]=+`
+[IndexFormat]=%_preview%|%_url%|%Artist%|%Album%|%Album Type%|%Year%|%Tracks%|
+[SearchBy]=%artist% - %album%
+[UserAgent]=1
+[Encoding]=url-utf-8
+
+# --------------------------------------------------------------------------------------------------
+# / INDEX
+# --------------------------------------------------------------------------------------------------
+[ParserScriptIndex]=...
+Debug "on" "D:\Dev\wsrc-melon\Melon_IndexParse.txt" "10"
+
+RegexpReplace "\t+" ""
+FindLine "<li class=\"album11_li"
+
+Do
+    joinuntil "</li"
+    RegexpReplace "\t+" ""
+    RegexpReplace "<b>|<\/b>" ""
+    RegexpReplace "(?<=vdo_name\">)(?=\[EP\])[^<]{1,30}(.*?)" "EP"
+    RegexpReplace "(?<=vdo_name\">)(?=\[정규\])[^<]{1,30}(.*?)" "Regular (정규)"
+    RegexpReplace "(?<=vdo_name\">)(?=\[싱글\])[^<]{1,30}(.*?)" "Single (싱글)"
+    RegexpReplace "(?<=vdo_name\">)(?=\[라이브\])[^<]{1,30}(.*?)" "Live (라이브)"
+    RegexpReplace "(?<=vdo_name\">)(?=\[옴니버스\])[^<]{1,30}(.*?)" "Omnibus (옴니버스)"
+    RegexpReplace "(?<=vdo_name\">)(?=\[재발매\])[^<]{1,30}(.*?)" "Re-Release (재발매)"
+    RegexpReplace "(?<=vdo_name\">)(?=\[방송\])[^<]{1,30}(.*?)" "Broadcast (방송)"
+    RegexpReplace "(?<=vdo_name\">)(?=\[리믹스\])[^<]{1,30}(.*?)" "Remix (리믹스)"
+
+    # Preview & URL
+    Say "https://www.melon.com/album/detail.htm?albumId="
+    SayRegexp "(?<=goAlbumDetail\(').*?(?=')" "|" ""
+    Say "|"
+
+    # Artist
+    SayRegexp "(?<=페이지 이동\">)[^\n]{1,100}(?=<\/a>\s*<\/span)|(?<=ellipsis\">)[^\n]{1,100}(?=<span)" "" ""
+    Say "|"
+
+    # Album
+    SayRegexp "(?<=페이지 이동\">).*(?=<\/a>\s*<\/dt>)" "" ""
+    Say "|"
+
+    # Album Type
+    SayRegexp "(?<=<span class=\"vdo_name\">)[^<\/]{1,30}(?=.)" "" ""
+    Say "|"
+
+    # Year
+    SayRegexp "(?<=\"cnt_view\">)[^<\/span>]{1,75}(?=.)" "" ""
+    Say "|"
+
+    # Tracks
+    SayRegexp "(?<=\"tot_song\">)[^곡]{1,75}(?=.)" "" ""
+    Say "|"
+
+	SayNewline
+    FindLine "<li class=\"album11_li" 2 1
+    Unspace
+While "<li class=\"album11_li"
+
+# --------------------------------------------------------------------------------------------------
+# / ALBUM
+# --------------------------------------------------------------------------------------------------
+[ParserScriptAlbum]=...
+#Debug "on" "D:\Dev\wsrc-melon\Debug\Melon_AlbumParse.txt" "10"
+
+FindLine "<div class=\"section_info\">"
+JoinUntil "section_albuminfo"
+RegexpReplace "\t+" ""
+
+OutputTo "COVERURL"
+SayRegexp "www|http:|https:+[^\s]+[\w]" "" "_500"
+Say "_1000.jpg"
+
+OutputTo "ALBUM"
+SayRegexp "(?<=앨범명<\/strong>).*?(?=<\/div>)" "" ""
+
+OutputTo "ALBUMARTIST"
+FindInLine "<div class=\"artist\">" 1 1
+If "<a"
+    FindInLine "<span>" 1 1
+    SayUntil "</span>"
+    If "<span"
+        do
+            Say "; "
+            FindInLine "<span>" 1 1
+            SayUntil "</span>"
+        While "</span>"
+    EndIf
+else
+    SayUntil "</div>"
+EndIf
+
+OutputTo "YEAR"
+SayRegexp "(?<=<dt>발매일<\/dt><dd>).*?(?=<\/dd>)" "" ""
+
+OutputTo "GENRE"
+SayRegexp "(?<=<dt>장르<\/dt><dd>).*?(?=<\/dd>)" "" ""
+
+OutputTo "PUBLISHER"
+SayRegexp "(?<=<dt>발매사<\/dt><dd>).*?(?=<\/dd>)" "" ""
+
+OutputTo "COPYRIGHT"
+SayRegexp "(?<=<dt>기획사<\/dt><dd>).*?(?=<\/dd>)" "" ""
+
+# Get multiple artists
+RegexpReplace "<a\D+goArtistDetail" ""
+RegexpReplace ";\"\s\D+(?<=\" >)" ""
+
+# A little source manipulation is needed to properly parse the Artist IDs
+Replace "<div class=\"ellipsis rank02\">" "<div class=\"ellipsis rank02\"><//new> "
+Replace "</a><span class=\"checkEllipsis\" style=\"display:none\">" "<//end><span class=\"checkEllipsis\" style=\"display:none\">"
+Replace "<span class=\"checkEllipsis\" style=\"display:none\">" "<//end><span class=\"checkEllipsis\" style=\"display:none\">"
+RegexpReplace "</a>," "<//and><//new>"
+RegexpReplace "</a></end>," "<//end>"
+
+OutputTo "MELONARTISTID"
+FindInLine "<div class=\"ellipsis rank02\"></" 1 1
+
+do
+    If "/new"
+        FindInLine "new>" 1 1
+        If " ('"
+            FindInLine "('" 1 1
+            SayUntil "')"
+        else
+            Say "|"
+        EndIf
+    EndIf
+
+    # Multiple Artists
+    If "/and"
+        Say ", "
+        FindInLine "and>" 1 1
+    EndIf
+
+    If "/end"
+        FindInLine "<div class=\"ellipsis rank02\">" 1 1
+        If "<//new>"
+            Say "|"
+        EndIf
+    EndIf
+
+    FindInLine "</" 1 1
+While "/"
+
+OutputTo "ARTIST"
+Gotochar 1
+RegexpReplace "<\/\/new> \('\d+'\)|<\/\/new>" ""
+Replace "<//and>" ", "
+
+Do
+    FindInLine "<div class=\"ellipsis rank02\">" 1 1
+    SayUntil "<//"
+    Say "|"
+While "<//end"
+
+# --------------------------------------------------------------------------------------------------
+# / ALBUM (Track Loop)
+# --------------------------------------------------------------------------------------------------
+GotoLine 1
+Do
+    JoinUntil "<div class=\"wrap\">"
+
+    OutputTo "MELONSONGID"
+    FindInLine "<a href=\"javascript:melon.play.playSong('"
+    FindInLine "',"
+    SayUntil ")"    	
+    Say "|"
+
+	OutputTo "TRACKS"
+    FindInLine "\">"
+    SayUntil "</a>"    	
+    Say "|"
+
+    FindInLine "wrap_song" 1 1
+While "_info\">"

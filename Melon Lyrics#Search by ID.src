@@ -1,0 +1,29 @@
+# --------------------------------------------------------------------------------------------------
+# Mp3tag Web Source ->
+# Name: Melon Lyrics (ID) (멜론 - 가사)
+# By: Jame S.
+# Version: 1.0
+# Last revision: 10/12/2020
+# --------------------------------------------------------------------------------------------------
+
+[Name]=Melon Lyrics (ID)
+[BasedOn]=melon.com
+[AlbumUrl]=https://www.melon.com/song/detail.htm?songId=
+[WordSeparator]=+
+[SearchBy]=%MELONSONGID%
+[UserAgent]=1
+[Encoding]=url-utf-8
+
+# --------------------------------------------------------------------------------------------------
+# / INDEX
+# --------------------------------------------------------------------------------------------------
+[ParserScriptAlbum]=...
+Debug "on" "D:\Dev\wsrc-melon\Debug\MelonLyricsID_Index.txt"
+
+FindLine "<div class=\"section_lyric\">"
+JoinUntil "section_cmt"
+RegexpReplace "\t+" ""
+RegexpReplace " <BR>|<BR>| <br>|<br>" "\r\n"
+
+outputto "UNSYNCEDLYRICS"
+SayRegexp "(?<=-->).*(?=<\/div><button)" "" ""
